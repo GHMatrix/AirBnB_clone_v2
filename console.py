@@ -115,6 +115,45 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
+        arg2 = shlex.split(args)
+        if not args:
+            print("** class name missing **")
+            return
+        elif arg2[0] not in HBNBCommand.classes:
+            print("** class doesn't exist **")
+            return
+        new_instance = HBNBCommand.classes[arg2[0]]()
+        arg2 = arg2[1:]
+        for arg in arg2:
+            """
+            Iterates all arguments passed from the command line
+
+            E.g: arg2 = [city_id="0001", user_id="0001", number_rooms=4]
+                 arg = city_id="0001"
+            """
+            try:
+                new_list = list(arg.split('='))
+
+            except Exception:
+                continue
+            key = new_list[0]
+            value = new_list[1]
+            try:
+                test = int(value)
+                if (len(str(test)) == len(value)):
+                    value = test
+            except Exception:
+                try:
+                    value = float(value)
+                except Exception:
+                    value = value.replace('_', ' ')
+            if hasattr(new_instance, key):
+                setattr(new_instance, key, value)
+        print(new_instance.id)
+        new_instance.save()    
+            def do_create(self, args):
+        """ Create an object of any class"""
+        arg2 = shlex.split(args)
         if not args:
             print("** class name missing **")
             return
