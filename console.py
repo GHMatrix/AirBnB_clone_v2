@@ -151,7 +151,8 @@ class HBNBCommand(cmd.Cmd):
                 setattr(new_instance, key, value)
         print(new_instance.id)
         new_instance.save()    
-            def do_create(self, args):
+            
+    def do_create(self, args):
         """ Create an object of any class"""
         arg2 = shlex.split(args)
         if not args:
