@@ -17,3 +17,15 @@ sudo ln -sf /data/web_static/releases/test/ /data/web_static/current
 
 # Give ownership to the ubuntu user and group
 sudo chown -R ubuntu:ubuntu /data/
+
+# Update Nginx configuration
+nginx_config="/etc/nginx/sites-available/default"
+alias_config="location /hbnb_static/ {\n\talias /data/web_static/current/;\n}\n"
+
+# Check if alias_config is already in the nginx_config
+if ! grep -q "alias /data/web_static/current/;" "$nginx_config"; then
+    sudo sed -i "/server_name _;/a $alias_config" "$nginx_config"
+fi
+
+# Restart Nginx
+sudo service nginx restart
