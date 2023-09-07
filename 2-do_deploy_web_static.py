@@ -1,45 +1,54 @@
 #!/usr/bin/python3
-"""Fabric script to distribute an archive
-to web servers using do_deploy function."""
+"""
+Fabric script to deploy an archive to web servers.
+"""
 
-from fabric.api import put, run, env
+from fabric.api import env, put, run, sudo
 import os
+from os.path import exists
 
+# Define the remote user and hosts
+env.user = 'ubuntu'
 env.hosts = ['100.24.236.219', '34.229.55.229']
-env.user = "ubuntu"
-
 
 def do_deploy(archive_path):
     """
-    deploys archive to web server
+    Distributes an archive to web servers and deploys it.
+
+    Args:
+        archive_path (str): Path to the archive to be deployed.
+
+    Returns:
+        bool: True if deployment is successful, False otherwise.
     """
-    path = archive_path.split('/')[-1]
-    line = path.split('.')[0]
-    if not os.path.isfile(archive_path):
-        return False
-    if put(archive_path, "/tmp/{}".format(path)).failed:
-        return False
-    if run("rm -rf /data/web_static/releases/{}"
-            .format(line)).failed:
-        return False
-    if run("mkdir -p /data/web_static/releases/{}/"
-            .format(line)).failed:
-        return False
-    if run("tar -xzf /tmp/{} -C /data/web_static/releases/{}/"
-            .format(path, line)).failed:
-        return False
-    if run("rm /tmp/{}".format(path)).failed:
-        return False
-    if run("mv /data/web_static/releases/{}/web_static/* "
-            "/data/web_static/releases/{}/".format(line, line)).failed:
-        return False
-    if run("rm -rf /data/web_static/releases/{}/web_static"
-            .format(line)).failed:
-        return False
-    if run("rm -rf /data/web_static/current").failed:
-        return False
-    if run("ln -s /data/web_static/releases/{}/ /data/web_static/current"
-            .format(line)).failed:
+    if not exists(archive_path):
         return False
 
-    return True
+    try:
+        # Upload the archive to /tmp/ directory on the web server
+        put(archive_path, '/tmp/')
+
+        # Extract the archive to the /data/web_static/releases/ directory
+        archive_filename = os.path.basename(archive_path)
+        release_path = '/data/web_static/releases/{}'.format(
+            archive_filename[:-4]
+        )
+        sudo('mkdir -p {}'.format(release_path))
+        sudo('tar -xzf /tmp/{} -C {}'.format(archive_filename, release_path))
+
+        # Remove the uploaded archive
+        sudo('rm /tmp/{}'.format(archive_filename))
+
+        # Move the contents to a new directory and update permissions
+        sudo('mv {}/web_static/* {}'.format(release_path, release_path))
+        sudo('rm -rf {}/web_static'.format(release_path))
+        sudo('chown -R ubuntu:ubuntu {}'.format(release_path))
+
+        # Update the symbolic link to the new release
+        current_link = '/data/web_static/current'
+        sudo('rm -rf {}'.format(current_link))
+        sudo('ln -s {} {}'.format(release_path, current_link))
+
+        return True
+    except Exception as e:
+        return False
