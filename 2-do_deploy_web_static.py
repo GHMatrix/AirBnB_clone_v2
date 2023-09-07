@@ -5,7 +5,7 @@ to web servers using do_deploy function."""
 from fabric.api import local, put, run, env
 from os.path import exists
 
-env.hosts = ['<IP web-01>', '<IP web-02>']
+env.hosts = ['<228879-web-01>', '<228879-web-02>']
 env.user = 'ubuntu'
 
 
