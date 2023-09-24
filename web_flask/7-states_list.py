@@ -6,6 +6,7 @@ Starts a Flask web application that displays a list of states.
 from flask import Flask, render_template
 from models import storage
 from models.state import State
+from models import *
 
 app = Flask(__name__)
 
